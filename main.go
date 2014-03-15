@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	. "github.com/y-uuki/gotask/task"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,64 +11,6 @@ import (
 
 func init() {
 	log.SetFlags(log.Lshortfile)
-}
-
-type Task struct {
-	Id     int    `json:"id"`
-	Detail string `json:"details"`
-	Done   bool   `json:"done"`
-}
-
-func NewTask(id int, detail string) *Task {
-	task := &Task{
-		Id:     id,
-		Detail: detail,
-	}
-	return task
-}
-
-func (task Task) String() string { // 引数なし,戻り値あり
-	return fmt.Sprintf("%d) %s (%t)", task.Id, task.Detail, task.Done)
-}
-
-func (task Task) Display() {
-	fmt.Printf("%s\n", task)
-	return
-}
-
-func (task *Task) Edit(detail string) {
-	task.Detail = detail
-}
-
-func (task *Task) Finish() { // 引数,戻り値無し
-	task.Done = true
-}
-
-type Tasks struct {
-	Owner string  `json:"owner"`
-	Tasks []*Task `json:"tasks"`
-}
-
-func NewTasks(owner string) *Tasks {
-	tasks := &Tasks{
-		Owner: owner,
-	}
-	return tasks
-}
-
-func (tasks *Tasks) Add(task *Task) {
-	tasks.Tasks = append(tasks.Tasks, task)
-}
-
-func (tasks *Tasks) Delete(id int) {
-	for i, task := range tasks.Tasks {
-		if task.Id == id {
-			copy(tasks.Tasks[i:], tasks.Tasks[i+1:])
-			tasks.Tasks[len(tasks.Tasks)-1] = nil
-			tasks.Tasks = tasks.Tasks[:len(tasks.Tasks)-1]
-			break
-		}
-	}
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +59,12 @@ func TasksJSONHandler(tasks *Tasks) func(w http.ResponseWriter, r *http.Request)
 
 func main() {
 	log.Printf("Starting server...")
+
+	tasks := NewTasks("y_uuki")
+	tasks.Add(NewTask(1, "buy the milk"))
+	tasks.Add(NewTask(2, "east sushi"))
+	tasks.Add(NewTask(3, "goto takakura2jyo"))
+	tasks.Delete(1)
 
 	http.HandleFunc("/", IndexHandler)
 	http.HandleFunc("/tasks", TasksHandler(tasks))
